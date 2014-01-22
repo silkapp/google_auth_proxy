@@ -74,7 +74,7 @@ func (p *OauthProxy) GetLoginURL(redirectUrl string) string {
 	params.Add("scope", p.oauthScope)
 	params.Add("client_id", p.clientID)
 	params.Add("response_type", "code")
-	if strings.HasPrefix(redirectUrl, "/") {
+	if strings.HasPrefix(redirectUrl, "/") || strings.HasPrefix(redirectUrl, "https://") {
 		params.Add("state", redirectUrl)
 	}
 	return fmt.Sprintf("%s?%s", p.oauthLoginUrl, params.Encode())
@@ -206,6 +206,7 @@ func (p *OauthProxy) SignInPage(rw http.ResponseWriter, req *http.Request, code 
 	p.ClearCookie(rw, req)
 	rw.WriteHeader(code)
 	templates := getTemplates()
+        redirCombo := "https://" + req.Host + req.URL.RequestURI()
 
 	t := struct {
 		SignInMessage string
@@ -214,7 +215,7 @@ func (p *OauthProxy) SignInPage(rw http.ResponseWriter, req *http.Request, code 
 	}{
 		SignInMessage: p.SignInMessage,
 		Htpasswd:      p.HtpasswdFile != nil,
-		Redirect:      req.URL.RequestURI(),
+		Redirect:      redirCombo,
 	}
 	templates.ExecuteTemplate(rw, "sign_in.html", t)
 }
